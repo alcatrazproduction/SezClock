@@ -1,3 +1,7 @@
+/***************************************************************************************************************************
+ * Please use version 1.8.5 of environement
+ */
+
 #include <LiquidCrystal.h>
 
 #include "Adafruit_NeoPixel.h"
@@ -13,8 +17,8 @@
 
 // Globals
 
-CRGB          leds[NUM_LEDS];       // Led array
-long          color           = 0xffffff;  // Color of LED
+CRGB          leds[NUM_LEDS];               // Led array
+long          color           = 0xffffff;   // Color of LED
 unsigned long theTime,currentTime;
 int           tours = -1;
 
