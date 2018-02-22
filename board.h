@@ -1,3 +1,27 @@
+#ifndef TRUE
+# define TRUE (1==1)
+#endif
+
+#ifndef FALSE
+# define FALSE (0==1)
+#endif
+
+// Display controler
+
+#define   LCD_DB4         30
+#define   LCD_DB5         31
+#define   LCD_DB6         32
+#define   LCD_DB7         33
+
+#define   LCD_E           38
+#define   LCD_RS          39
+
+#define   LCD_SWITCH      15      // AD15
+
+#define   LCD_COLUMN      20
+#define   LCD_ROW         4
+
+// Led strip 
 #define   DATA_PIN        37
 
 #define   HOURS_10        0       // Digit A

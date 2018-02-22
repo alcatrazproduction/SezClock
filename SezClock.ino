@@ -21,6 +21,30 @@ CRGB          leds[NUM_LEDS];               // Led array
 long          color           = 0xffffff;   // Color of LED
 unsigned long theTime,currentTime;
 int           tours = -1;
+LiquidCrystal lcd(
+                  LCD_RS, 
+                  LCD_E,
+                  LCD_DB4, 
+                  LCD_DB5, 
+                  LCD_DB6, 
+                  LCD_DB7
+                  );
+                  
+int           touch_val;
+unsigned long touch_millis;
+char          touch_bits    = 0;
+int           menu_stage    = 0;
+
+//********************* Mode setting *********************************
+char          display_mode  = 0;      //  Mode 0, Stanby mode, time displayed ( with RTC )
+                                      //  Mode 1, Stanby mode, waiting for race start
+                                      //  Mode 2, Race Running
+                                      //  Mode 3, Race finished, stanby
+unsigned long race_duration = 60;     //  Race duration in seconds
+int           race_laps     = 2;      //  Number of laps at end of time, if 0, end at time end ( trainning )
+bool          race_running  = FALSE;  //  Race is running
+bool          race_ended    = TRUE;   //  Race is finished
+bool          race_waiting  = FALSE;   // Race is waiting for start
 
 //Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUM_LEDS, 6, NEO_GRB + NEO_KHZ800);
 
@@ -59,7 +83,8 @@ struct tm       theTm;
 struct tm       theTm2;
 unsigned long   actTime = theTime / 1000;
 
- memset(&theTm,0,sizeof( theTm ) );
+  lcd.setCursor(0,3);
+  memset(&theTm,0,sizeof( theTm ) );
   if( ( tours <= 0 ) & ( tours != -2 ))
   {
     localtime_r( &actTime , &theTm);
@@ -83,6 +108,11 @@ Serial.println(" ");
     writeDots(  1           , (theTm.tm_sec%2)==0 ? 0: 0xffffff );
     writeDots(  2           , (theTm.tm_sec%2)==1 ? 0: 0xffffff );
     writeDots(  3           , (theTm.tm_sec%2)==1 ? 0: 0xffffff );
+
+char *lcd_buf = "                    ";
+
+    sprintf(lcd_buf,"%2.2d:%2.2d:%2.2d",theTm.tm_hour,theTm.tm_min,theTm.tm_sec );
+    lcd.print(lcd_buf);
   }
   else
   {
@@ -118,22 +148,164 @@ Serial.println(" ");
       writeDots(  1           , color );
       writeDots(  2           , color );
       writeDots(  3           , color );
+
+      lcd.print( tours );
+      lcd.print( tours > 1 ?" tours   ":" tour  ");
     }    
   }
   FastLED.show();
  // pixels.show();
 }
+/**************************************************************************************************
+ * old Version...
+ */
 
+void  _processTouch( void )
+{
+int v10   = touch_val / 10;
+
+  switch( touch_val / 100 )
+  {
+    case 00:      // Back,Back-Enter, Menu-Back
+      switch( v10 )
+      {
+        case  9:
+          lcd.print( "Back       " );
+          break;
+        case  8:
+          lcd.print( "Back-Enter " );
+          break;
+        case  7:
+          lcd.print( "Back-Menu  " );
+          break;
+        default:
+          lcd.print( "Unknow ");
+          lcd.print( touch_val );
+          break;
+      }
+      break;
+    case 10:      // Idle
+      lcd.print("Idle       ");
+      break;
+    case  1:      // Down, Up-Down, Menu-Down
+      switch( v10 )
+      {
+        case  17:
+          lcd.print( "Down       " );
+          break;
+        case  16:
+          lcd.print( "Up-Down    " );
+          break;
+        case  12:
+          lcd.print( "Menu-Down  " );
+          break;
+        default:
+          lcd.print( "Unknow ");
+          lcd.print( touch_val );
+          break;
+      }      
+      break;
+    case  2:      // Menu-Enter, Menu-Up
+      switch( v10 )
+      {
+        case  24:
+          lcd.print( "Menu-Enter " );
+          break;
+        case  27:
+          lcd.print( "Menu-Up    " );
+          break;
+        default:
+          lcd.print( "Unknow ");
+          lcd.print( touch_val );
+          break;
+      }
+      break;
+    case  3:      // Menu
+      lcd.print("Menu       ");
+      break;
+    case  5:      // Enter
+      lcd.print("Enter      ");
+      break;
+    case  6:      // Up
+      lcd.print("Up        ");
+      break;
+    default:      // Undef
+      lcd.print( "Unknow ");
+      lcd.print( touch_val );
+      break;
+  }
+  
+}
+/**************************************************************************************************
+ * new Version...
+ */
+
+void  processTouch( void )
+{
+  switch( touch_val / 11 )
+  {
+    case  8:
+      lcd.print( "Back       " );
+      break;
+    case  7:
+      lcd.print( "Back-Enter " );
+      break;
+    case  6:
+      lcd.print( "Back-Menu  " );
+      break;
+    case 92:      // Idle
+      lcd.print("Idle       ");
+      break;
+    case  16:
+      lcd.print( "Down       " );
+      break;
+    case  14:
+      lcd.print( "Up-Down    " );
+      break;
+    case  11:
+      lcd.print( "Menu-Down  " );
+      break;
+    case  22:
+      lcd.print( "Menu-Enter " );
+      break;
+    case  25:
+      lcd.print( "Menu-Up    " );
+      break;
+    case  29:      // Menu
+      lcd.print("Menu       ");
+      break;
+    case  45:      // Enter
+      lcd.print("Enter      ");
+      break;
+    case  62:      // Up
+      lcd.print("Up        ");
+      break;
+    default:      // Undef
+      lcd.print( "Unknow ");
+      lcd.print( touch_val );
+      break;
+  }
+}
+/***************************************************************************************************
+ * 
+ */
 void setup() 
 {
   Serial.begin(9800);
   FastLED.addLeds<WS2811, DATA_PIN,RGB>(leds, NUM_LEDS);
   theTime = 130L*1000L;
   currentTime = millis();
-  
- // pixels.begin();
- // pixels.show();
- // pinMode( 3, OUTPUT );
+
+  lcd.begin( LCD_COLUMN, LCD_ROW );
+
+  lcd.print("Sezegnin Clock");
+  lcd.setCursor(0,1);
+  lcd.print("(c)Yves Huguenin");
+  lcd.setCursor(0,2);
+  lcd.print("2018 Press Menu");
+
+  touch_val     = analogRead( LCD_SWITCH );
+  touch_millis  = millis();
 }
 
 int flag = 0;
@@ -142,6 +314,7 @@ void loop()
 {
 unsigned long actTime = millis() / 1000;
 unsigned long preTime = currentTime / 1000;
+
   if( ( actTime ) != ( preTime ) )
   {
     currentTime = millis();
@@ -174,4 +347,26 @@ unsigned long preTime = currentTime / 1000;
     }
     displayClock();
   }
+
+ int touch_read  = analogRead( LCD_SWITCH );
+
+ int  v = touch_val-touch_read;
+
+  if( v < 0 )
+    v = -v;
+
+  if( v > 10 )
+  {
+    touch_millis  = millis();
+    touch_val     = touch_read;
+  }
+  lcd.setCursor(15,0);
+  lcd.print( touch_val/11 );
+  lcd.print("  ");
+  if( ( millis() - touch_millis ) > 50 )
+  {
+    lcd.setCursor(0,0);
+    processTouch(  );
+  }
+ 
 }
