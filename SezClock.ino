@@ -1,12 +1,15 @@
-#include <Adafruit_NeoPixel.h>
+#include <LiquidCrystal.h>
+
+#include "Adafruit_NeoPixel.h"
 
 
-#include <FastLED.h>
+#include "FastLED.h"
 
 
 #include "board.h"
 #include "function.h"
-
+#include <stdio.h>
+#include <time.h>
 
 // Globals
 
@@ -107,10 +110,10 @@ Serial.println(" ");
       writeDigit( MINUTES_1   , 'O' - '0'-1 );
       writeDigit( SECONDS_10  , 'U' - '0'-1 );
       writeDigit( SECONDS_1   , 'R' - '0'-1 );
-      writeDots(  0           , 0x0f0f0f );
-      writeDots(  1           , 0x0f0f0f );
-      writeDots(  2           , 0x0f0f0f );
-      writeDots(  3           , 0x0f0f0f );
+      writeDots(  0           , color );
+      writeDots(  1           , color );
+      writeDots(  2           , color );
+      writeDots(  3           , color );
     }    
   }
   FastLED.show();
