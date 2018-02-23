@@ -21,6 +21,20 @@
 #define   LCD_COLUMN      20
 #define   LCD_ROW         4
 
+#define   LCD_TIME        3
+#define   LCD_STATUS      2
+
+
+#define   S_IDLE_BIT      0x00
+#define   S_UP_BIT        0x01
+#define   S_BACK_BIT      0x02
+#define   S_MENU_BIT      0x04
+#define   S_ENTER_BIT     0x08
+#define   S_DOWN_BIT      0x10
+#define   S_UNDEF_BIT     0x80
+
+#define   S_T_PRESSED     50                        // time buttons pressed in millis to accept
+
 // Led strip 
 #define   DATA_PIN        37
 
