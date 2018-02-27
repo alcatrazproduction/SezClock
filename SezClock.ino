@@ -1,3 +1,7 @@
+
+#include <stdio.h>
+#include <time.h>
+
 #include <EEPROM.h>
 
 #include <UbxGpsNavPosllh.h>
@@ -18,50 +22,15 @@
 #include "Adafruit_NeoPixel.h"
 
 
-#include "FastLED.h"
+#include  "FastLED.h"
 
 
-#include "board.h"
-#include "function.h"
-#include <stdio.h>
-#include <time.h>
+#include  "board.h"
+#include  "function.h"
+#include  "globals.h"
+#include  "esp.h"
+#include  "menu.h"
 
-// Globals
-
-CRGB          leds[NUM_LEDS];               // Led array
-long          color           = 0xffffff;   // Color of LED
-unsigned long theTime,currentTime;
-int           tours = -1;
-S_EEProm      eeprom;
-
-LiquidCrystal lcd(
-                  LCD_RS, 
-                  LCD_E,
-                  LCD_DB4, 
-                  LCD_DB5, 
-                  LCD_DB6, 
-                  LCD_DB7
-                  );
-UbxGpsNavPvt  gps( GPS_SERIAL );
-                  
-int           touch_val;
-unsigned long touch_millis;
-char          touch_bits    = S_IDLE_BIT;
-int           menu_stage    = 0;
-int           current_item  = 0;
-
-//********************* Mode setting *********************************
-char          display_mode  = 0;                  //  Mode 0, Stanby mode, time displayed ( with RTC )
-                                                  //  Mode 1, Stanby mode, waiting for race start
-                                                  //  Mode 2, Race Running
-                                                  //  Mode 3, Race finished, stanby
-unsigned long race_duration   = 60;               //  Race duration in seconds
-int           race_laps       = 2;                //  Number of laps at end of time, if 0, end at time end ( trainning )
-unsigned long _race_duration  = race_duration;    //  Race duration in seconds ( copy )
-int           _race_laps      = race_laps;        //  Number of laps at end of time, if 0, end at time end ( trainning ) ( copy )
-bool          race_running    = FALSE;              //  Race is running
-bool          race_ended      = TRUE;               //  Race is finished
-bool          race_waiting    = FALSE;              // Race is waiting for start
 
 
 int   readEEProm()
@@ -159,7 +128,7 @@ char            *lcd_buf = "                    ";
       {
         localtime_r( &actTime , &theTm);
       
-    SEND_DBG theTime / 1000 );
+    SEND_DBG( theTime / 1000 );
     SEND_DBG("\t Time :");
     SEND_DBG(theTm.tm_hour);
         writeDigit( HOURS_10    , theTm.tm_hour   / 10 );
@@ -228,74 +197,7 @@ char            *lcd_buf = "                    ";
   FastLED.show();
 }
 
-/**************************************************************************************************
- * new Version...
- * Return the selected function
- */
 
-int  processTouch( void )
-{
-  
-int r;
-
-  switch( touch_val / 11 )
-  {
-    case  8:
-//      lcd.print( "Back       " );
-      r = S_BACK_BIT;
-      break;
-    case  7:
-//      lcd.print( "Back-Enter " );
-      r = S_BACK_BIT || S_ENTER_BIT;
-      break;
-    case  6:
-//      lcd.print( "Back-Menu  " );
-      r = S_BACK_BIT || S_MENU_BIT;
-      break;
-    case 92:      // Idle
-//      lcd.print("Idle       ");
-      r = S_IDLE_BIT;
-      break;
-    case  16:
-//      lcd.print( "Down       " );
-      r = S_DOWN_BIT;
-      break;
-    case  14:
-//      lcd.print( "Up-Down    " );
-      r = S_UP_BIT || S_DOWN_BIT;
-      break;
-    case  11:
-//      lcd.print( "Menu-Down  " );
-      r = S_DOWN_BIT || S_MENU_BIT;
-      break;
-    case  22:
-//      lcd.print( "Menu-Enter " );
-      r = S_ENTER_BIT || S_MENU_BIT;
-      break;
-    case  25:
-//      lcd.print( "Menu-Up    " );
-      r = S_UP_BIT || S_MENU_BIT;
-      break;
-    case  29:      // Menu
-//      lcd.print("Menu       ");
-      r = S_MENU_BIT;
-      break;
-    case  45:      // Enter
-//      lcd.print("Enter      ");
-      r = S_ENTER_BIT;
-      break;
-    case  62:      // Up
-      r = S_UP_BIT;
-//      lcd.print("Up        ");
-      break;
-    default:      // Undef
-      r = S_UNDEF_BIT;
-//      lcd.print( "Unknow ");
-//      lcd.print( touch_val );
-      break;
-  }
-  return r;
-}
 /***************************************************************************************************
  * 
  */
@@ -382,155 +284,4 @@ unsigned long preTime = currentTime / 1000;
     }
     //**********************************/
 }
-/***************************************************************************************************
- * 
- */
-void processInput( void )
-{
- int touch_read  = analogRead( LCD_SWITCH );
 
- int  v = touch_val-touch_read;
-
-  if( v < 0 )
-    v = -v;
-
-  if( v > 20 )
-  {
-    touch_millis  = millis();
-    touch_val     = touch_read;
-  }
-  if( ( millis() - touch_millis ) > S_T_PRESSED )
-  {
-  int t;
-
-    lcd.setCursor(0,0);
-    t           = processTouch(  );
-    if( touch_bits != t )                     // we pressed some button
-    {
-      touch_bits  = t;
-      switch( t )
-      {
-        case S_IDLE_BIT:
-        case S_UNDEF_BIT:
-          break;
-        case S_MENU_BIT:                      // we request to enter menu
-          if( menu_stage == 0 )               // we are not in menu...
-          {
-            menu_stage    = M_NORMAL;         // set menu
-            current_item  = 1;
-            lcd.clear();
-            LCD_STRINGAT( 0,0, menu_0001[0] );
-            LCD_STRINGAT( 0,1, menu_0001[1] );
-          }
-          break;
-          
-        case S_UP_BIT:                        
-          switch( menu_stage )               
-          {
-            case M_NORMAL:
-              current_item++;
-              if( current_item > 3  )
-                current_item = 1;
-              LCD_STRINGAT( 0,1, menu_0001[current_item ] );
-              break;
-            case M_NORMAL | M_SETMODE:
-              current_item++;
-              if( current_item > 2  )
-                current_item = 1;
-              LCD_STRINGAT( 0,2, menu_0101[current_item ] );
-              break;
-          }
-          break;
-          
-        case S_DOWN_BIT:                        
-          switch( menu_stage )               
-          {
-            case M_NORMAL:
-              current_item--;
-              if( current_item < 1  )
-                current_item = 3;
-              LCD_STRINGAT( 0,1, menu_0001[current_item ] );
-              break;
-            case M_NORMAL | M_SETMODE:
-              current_item++;
-              if( current_item < 1  )
-                current_item = 2;
-              LCD_STRINGAT( 0,2, menu_0101[current_item ] );
-              break;
-          }
-          break;
-          
-        case S_ENTER_BIT:                        
-          switch( menu_stage )               
-          {
-            case M_NORMAL:
-              switch( current_item )
-              {
-                case 1:
-                  menu_stage |= M_SETMODE;
-                  current_item = 1;
-                  LCD_STRINGAT( 0,1, menu_0101[0] );
-                  LCD_STRINGAT( 0,2, menu_0101[current_item ] );
-                  break;
-                default:
-                  break;
-              }
-              break;
-            case M_NORMAL | M_SETMODE:
-              menu_stage ^= M_SETMODE;
-              switch( current_item )
-              {
-                case 1:       // Clock
-                  display_mode  = 0;
-                  break;
-                case 2:       // Race
-                  display_mode  = 1;
-                  break;
-              
-              }
-              current_item  = 1;
-              lcd.clear();
-              LCD_STRINGAT( 0,0,  menu_0001[0] );
-              LCD_STRINGAT( 0,1,  menu_0001[ current_item ] );
-              break;
-          }
-          break;
-        case S_BACK_BIT:                        
-          switch( menu_stage )               
-          {
-            case M_NORMAL:
-                menu_stage = 0;
-                lcd.clear();
-            //    LCD_STRINGAT( 0,1, menu_0101[0] );
-            //    LCD_STRINGAT( 0,2, menu_0101[current_item ] );
-              break;
-            case M_NORMAL | M_SETMODE:
-                menu_stage    = M_NORMAL;
-                current_item  = 1;
-                lcd.clear();
-                LCD_STRINGAT( 0,0, menu_0001[0] )
-                LCD_STRINGAT( 0,1, menu_0001[ current_item ] )
-              break;
-          }
-          break;
-          
-        default:                              // do nothing :-)
-          break;
-      }
-      SEND_DBG(t);
-      SEND_DBG(" -> ");
-      SEND_DBG( menu_stage );
-    }
-    else if( t != S_IDLE_BIT )                // do nothing if nothing pressed for now
-    {                                         // this is for long pressing
-    int d = ( millis() - touch_millis ) % ( S_T_PRESSED * 4 );
-      switch( t )
-      {
-        case S_MENU_BIT:                      // we request to enter menu
-          break;
-        default:                              // do nothing :-)
-          break;
-      }
-    }
-  }
-}
