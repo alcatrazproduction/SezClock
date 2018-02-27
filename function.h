@@ -1,4 +1,6 @@
-
+/************************************************************************************************************************
+ * Prototype
+ */
 
 void  writeDigit( int witch, unsigned char data );
 void  writeDots( int witch, unsigned long col );
@@ -7,7 +9,10 @@ void  writeLed( int witch, unsigned long col );
 int   processTouch( void);
 int   readEEProm();
 int   writeEEProm();
+void  processInput( void );
 
+#define LCD_PRINTAT(x,y,m)  lcd.setCursor( x,y ); lcd.print( m);
+#define LCD_STRINGAT(x,y,m) LCD_PRINTAT(x,y,(char *)m)
 // Menu type
 #define M_NORMAL      0x0001              // Standard menu
 #define M_SPECIAL     0x0002              // Special menu
@@ -44,13 +49,13 @@ typedef struct EEProm
 
 } S_EEProm;
 
-static  char  *message[]    =
+static  char  *message[][21]    =
 {
   "Menu                ",
   "Return              ",
   "Select Mode         ",
   "Display Clock       ",
-  "Race Mode           "
+  "Race Mode           ",
   "Select Preset       ",
   "Minutes             ",
   "Laps                ",
@@ -61,7 +66,7 @@ static  char  *message[]    =
   "Race Ended          ",
 };
 
-static  char  *menu_0001[]   =
+static  char  *menu_0001[][21]   =
 {
   "Menu, Select SubMenu",
   "Mode Selection      ",
@@ -69,7 +74,7 @@ static  char  *menu_0001[]   =
   "Race Setting        ",
 };
 
-static  char  *menu_0101[]   =
+static  char  *menu_0101[][21]   =
 {
   "Select Mode         ",
   "Display Clock       ",

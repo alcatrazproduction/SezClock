@@ -401,7 +401,9 @@ void setup()
   readEEProm();
   setTime( eeprom.saveTime );
 }
-
+/***************************************************************************************************
+ * 
+ */
 int flag = 0;
 
 void loop() 
@@ -444,9 +446,26 @@ unsigned long preTime = currentTime / 1000;
         }
       }
     }
-    
     displayClock();
   }
+  processInput();
+ /******************************************
+     if (Serial2.available())
+    {
+        Serial.write(Serial2.read());
+    }
+
+    if (Serial.available())
+    {
+        Serial2.write(Serial.read());
+    }
+    //**********************************/
+}
+/***************************************************************************************************
+ * 
+ */
+void processInput( void )
+{
  int touch_read  = analogRead( LCD_SWITCH );
 
  int  v = touch_val-touch_read;
@@ -454,7 +473,7 @@ unsigned long preTime = currentTime / 1000;
   if( v < 0 )
     v = -v;
 
-  if( v > 10 )
+  if( v > 20 )
   {
     touch_millis  = millis();
     touch_val     = touch_read;
@@ -479,8 +498,8 @@ unsigned long preTime = currentTime / 1000;
             menu_stage    = M_NORMAL;         // set menu
             current_item  = 1;
             lcd.clear();
-            lcd.setCursor( 0,0 ); lcd.print( menu_0001[0] );
-            lcd.setCursor( 0,1 ); lcd.print( menu_0001[1] );
+            LCD_STRINGAT( 0,0, menu_0001[0] );
+            LCD_STRINGAT( 0,1, menu_0001[1] );
           }
           break;
           
@@ -491,13 +510,13 @@ unsigned long preTime = currentTime / 1000;
               current_item++;
               if( current_item > 3  )
                 current_item = 1;
-              lcd.setCursor( 0,1 ); lcd.print( menu_0001[current_item ] );
+              LCD_STRINGAT( 0,1, menu_0001[current_item ] );
               break;
             case M_NORMAL | M_SETMODE:
               current_item++;
               if( current_item > 2  )
                 current_item = 1;
-              lcd.setCursor( 0,2 ); lcd.print( menu_0101[current_item ] );
+              LCD_STRINGAT( 0,2, menu_0101[current_item ] );
               break;
           }
           break;
@@ -509,13 +528,13 @@ unsigned long preTime = currentTime / 1000;
               current_item--;
               if( current_item < 1  )
                 current_item = 3;
-              lcd.setCursor( 0,1 ); lcd.print( menu_0001[current_item ] );
+              LCD_STRINGAT( 0,1, menu_0001[current_item ] );
               break;
             case M_NORMAL | M_SETMODE:
               current_item++;
               if( current_item < 1  )
                 current_item = 2;
-              lcd.setCursor( 0,2 ); lcd.print( menu_0101[current_item ] );
+              LCD_STRINGAT( 0,2, menu_0101[current_item ] );
               break;
           }
           break;
@@ -529,8 +548,8 @@ unsigned long preTime = currentTime / 1000;
                 case 1:
                   menu_stage |= M_SETMODE;
                   current_item = 1;
-                  lcd.setCursor( 0,1 ); lcd.print( menu_0101[0] );
-                  lcd.setCursor( 0,2 ); lcd.print( menu_0101[current_item ] );
+                  LCD_STRINGAT( 0,1, menu_0101[0] );
+                  LCD_STRINGAT( 0,2, menu_0101[current_item ] );
                   break;
                 default:
                   break;
@@ -550,8 +569,8 @@ unsigned long preTime = currentTime / 1000;
               }
               current_item  = 1;
               lcd.clear();
-              lcd.setCursor( 0,0 ); lcd.print( menu_0001[0] );
-              lcd.setCursor( 0,1 ); lcd.print( menu_0001[ current_item ] );
+              LCD_STRINGAT( 0,0,  menu_0001[0] );
+              LCD_STRINGAT( 0,1,  menu_0001[ current_item ] );
               break;
           }
           break;
@@ -561,15 +580,15 @@ unsigned long preTime = currentTime / 1000;
             case M_NORMAL:
                 menu_stage = 0;
                 lcd.clear();
-            //    lcd.setCursor( 0,1 ); lcd.print( menu_0101[0] );
-            //    lcd.setCursor( 0,2 ); lcd.print( menu_0101[current_item ] );
+            //    LCD_STRINGAT( 0,1, menu_0101[0] );
+            //    LCD_STRINGAT( 0,2, menu_0101[current_item ] );
               break;
             case M_NORMAL | M_SETMODE:
                 menu_stage    = M_NORMAL;
                 current_item  = 1;
                 lcd.clear();
-                lcd.setCursor( 0,0 ); lcd.print( menu_0001[0] );
-                lcd.setCursor( 0,1 ); lcd.print( menu_0001[ current_item ] );
+                LCD_STRINGAT( 0,0, menu_0001[0] )
+                LCD_STRINGAT( 0,1, menu_0001[ current_item ] )
               break;
           }
           break;
@@ -593,15 +612,4 @@ unsigned long preTime = currentTime / 1000;
       }
     }
   }
- /******************************************
-     if (Serial2.available())
-    {
-        Serial.write(Serial2.read());
-    }
-
-    if (Serial.available())
-    {
-        Serial2.write(Serial.read());
-    }
-    //**********************************/
 }
