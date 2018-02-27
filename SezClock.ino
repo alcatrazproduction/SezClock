@@ -42,7 +42,7 @@ LiquidCrystal lcd(
                   LCD_DB6, 
                   LCD_DB7
                   );
-UbxGpsNavPvt  gps(Serial2);
+UbxGpsNavPvt  gps( GPS_SERIAL );
                   
 int           touch_val;
 unsigned long touch_millis;
@@ -59,9 +59,9 @@ unsigned long race_duration   = 60;               //  Race duration in seconds
 int           race_laps       = 2;                //  Number of laps at end of time, if 0, end at time end ( trainning )
 unsigned long _race_duration  = race_duration;    //  Race duration in seconds ( copy )
 int           _race_laps      = race_laps;        //  Number of laps at end of time, if 0, end at time end ( trainning ) ( copy )
-bool          race_running  = FALSE;              //  Race is running
-bool          race_ended    = TRUE;               //  Race is finished
-bool          race_waiting  = FALSE;              // Race is waiting for start
+bool          race_running    = FALSE;              //  Race is running
+bool          race_ended      = TRUE;               //  Race is finished
+bool          race_waiting    = FALSE;              // Race is waiting for start
 
 
 int   readEEProm()
@@ -159,21 +159,21 @@ char            *lcd_buf = "                    ";
       {
         localtime_r( &actTime , &theTm);
       
-    Serial.print( theTime / 1000 );
-    Serial.print("\t Time :");
-    Serial.print(theTm.tm_hour);
+    SEND_DBG theTime / 1000 );
+    SEND_DBG("\t Time :");
+    SEND_DBG(theTm.tm_hour);
         writeDigit( HOURS_10    , theTm.tm_hour   / 10 );
         writeDigit( HOURS_1     , theTm.tm_hour   % 10 );
-    Serial.print(":");
-    Serial.print(theTm.tm_min);
+    SEND_DBG(":");
+    SEND_DBG(theTm.tm_min);
         writeDigit( MINUTES_10  , theTm.tm_min    / 10 );
         writeDigit( MINUTES_1   , theTm.tm_min    % 10 );
-    Serial.print(":");
-    Serial.print(theTm.tm_sec / 10);
+    SEND_DBG(":");
+    SEND_DBG(theTm.tm_sec / 10);
         writeDigit( SECONDS_10  , theTm.tm_sec    / 10 );
-    Serial.print(theTm.tm_sec % 10);
+    SEND_DBG(theTm.tm_sec % 10);
         writeDigit( SECONDS_1   , theTm.tm_sec    % 10 );
-    Serial.println(" ");
+    SEND_DBG(" ");
         writeDots(  0           , (theTm.tm_sec%2)==0 ? 0: 0xffffff );
         writeDots(  1           , (theTm.tm_sec%2)==0 ? 0: 0xffffff );
         writeDots(  2           , (theTm.tm_sec%2)==1 ? 0: 0xffffff );
@@ -227,86 +227,7 @@ char            *lcd_buf = "                    ";
   lcd.print(lcd_buf);
   FastLED.show();
 }
-/**************************************************************************************************
- * old Version...
- */
 
-void  _processTouch( void )
-{
-int v10   = touch_val / 10;
-
-  switch( touch_val / 100 )
-  {
-    case 00:      // Back,Back-Enter, Menu-Back
-      switch( v10 )
-      {
-        case  9:
-//          lcd.print( "Back       " );
-          break;
-        case  8:
-//          lcd.print( "Back-Enter " );
-          break;
-        case  7:
-//          lcd.print( "Back-Menu  " );
-          break;
-        default:
-          lcd.print( "Unknow ");
-          lcd.print( touch_val );
-          break;
-      }
-      break;
-    case 10:      // Idle
-//      lcd.print("Idle       ");
-      break;
-    case  1:      // Down, Up-Down, Menu-Down
-      switch( v10 )
-      {
-        case  17:
-//          lcd.print( "Down       " );
-          break;
-        case  16:
-//          lcd.print( "Up-Down    " );
-          break;
-        case  12:
-//          lcd.print( "Menu-Down  " );
-          break;
-        default:
-//          lcd.print( "Unknow ");
-//          lcd.print( touch_val );
-          break;
-      }      
-      break;
-    case  2:      // Menu-Enter, Menu-Up
-      switch( v10 )
-      {
-        case  24:
-//          lcd.print( "Menu-Enter " );
-          break;
-        case  27:
-//          lcd.print( "Menu-Up    " );
-          break;
-        default:
-//          lcd.print( "Unknow ");
-//          lcd.print( touch_val );
-          break;
-      }
-      break;
-    case  3:      // Menu
-//      lcd.print("Menu       ");
-      break;
-    case  5:      // Enter
-//      lcd.print("Enter      ");
-      break;
-    case  6:      // Up
-//      lcd.print("Up        ");
-      break;
-    default:      // Undef
-//      lcd.print( "Unknow ");
-//      lcd.print( touch_val );
-      break;
-  }
-  
-}
 /**************************************************************************************************
  * new Version...
  * Return the selected function
@@ -382,7 +303,7 @@ void setup()
 {
   Serial.begin(115200);
   gps.begin(9600); // 115200
-  //Serial2.begin( 1200 );
+  ESP_SERIAL.begin( 115200 );
   FastLED.addLeds<WS2811, DATA_PIN,RGB>(leds, NUM_LEDS);
   theTime = 130L*1000L;
   currentTime = millis();
@@ -596,9 +517,9 @@ void processInput( void )
         default:                              // do nothing :-)
           break;
       }
-      Serial.print(t);
-      Serial.print(" -> ");
-      Serial.println( menu_stage );
+      SEND_DBG(t);
+      SEND_DBG(" -> ");
+      SEND_DBG( menu_stage );
     }
     else if( t != S_IDLE_BIT )                // do nothing if nothing pressed for now
     {                                         // this is for long pressing

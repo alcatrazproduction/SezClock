@@ -11,8 +11,27 @@ int   readEEProm();
 int   writeEEProm();
 void  processInput( void );
 
+/************************************************************************************************************************
+ * Utility
+ */
+
+#ifdef __DEBUG__
+# define  SEND_DBG(a) Serial.print( a );
+#else
+# define  SEND_DBG(a)
+#endif
+
+/************************************************************************************************************************
+ * LCD MACRO
+ */
+
 #define LCD_PRINTAT(x,y,m)  lcd.setCursor( x,y ); lcd.print( m);
 #define LCD_STRINGAT(x,y,m) LCD_PRINTAT(x,y,(char *)m)
+
+/************************************************************************************************************************
+ * Menu
+ */
+
 // Menu type
 #define M_NORMAL      0x0001              // Standard menu
 #define M_SPECIAL     0x0002              // Special menu

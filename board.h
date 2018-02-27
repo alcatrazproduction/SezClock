@@ -6,23 +6,38 @@
 # define FALSE (0==1)
 #endif
 
-// Display controler
+/*************************************************************************************************
+ * GPS Module
+ * Used to get time sync
+ */
+#define   GPS_SERIAL    Serial2
+/*************************************************************************************************
+ * ESP Module (ESP8266MOD ESP-12 )
+ * Data sync with timming system, will receive cmd when race are running ( auto start time, 
+ * laps,....)
+ * Also, ntp server
+ */
 
-#define   LCD_DB4         30
-#define   LCD_DB5         31
-#define   LCD_DB6         32
-#define   LCD_DB7         33
+#define   ESP_SERIAL    Serial3
+/*************************************************************************************************
+ * Display controler
+ * 
+ */
+#define   LCD_DB4         30    // Databus d4
+#define   LCD_DB5         31    // Databus d5
+#define   LCD_DB6         32    // Databus d6
+#define   LCD_DB7         33    // Databus d7
 
 #define   LCD_E           38
 #define   LCD_RS          39
 
 #define   LCD_SWITCH      15      // AD15
 
-#define   LCD_COLUMN      20
-#define   LCD_ROW         4
+#define   LCD_COLUMN      20      // LCD max columns
+#define   LCD_ROW         4       // LCD Line
 
-#define   LCD_TIME        3
-#define   LCD_STATUS      2
+#define   LCD_TIME        3       // Line for displaying clock 
+#define   LCD_STATUS      2       // Status line 
 
 
 #define   S_IDLE_BIT      0x00
@@ -33,9 +48,14 @@
 #define   S_DOWN_BIT      0x10
 #define   S_UNDEF_BIT     0x80
 
-#define   S_T_PRESSED     50                        // time buttons pressed in millis to accept
+#define   S_T_PRESSED     20                        // time buttons pressed in millis to accept
 
-// Led strip 
+/**************************************************************************************************
+ * 
+ * Led strip 
+ * 
+ */
+ 
 #define   DATA_PIN        37
 
 #define   HOURS_10        0       // Digit A
